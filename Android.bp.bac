@@ -1,0 +1,56 @@
+cc_defaults {
+    name: "libstagefright_wfd_defaults",
+    
+    srcs: [
+        "ANetworkSession.cpp",
+        "Parameters.cpp",
+        "ParsedMessage.cpp",
+        "sink/LinearRegression.cpp",
+        "sink/RTPSink.cpp",
+        "sink/TunnelRenderer.cpp",
+        "sink/WifiDisplaySink.cpp",
+        "TimeSeries.cpp",
+    ],
+    
+    shared_libs: [
+        "libbinder",
+        "libcutils",
+        "libgui",
+        "libmedia",
+        "libstagefright",
+        "libstagefright_foundation",
+        "libui",
+        "libutils",
+    ],
+    
+    include_dirs: [
+        "frameworks/av/media/libstagefright",
+        "frameworks/native/include/media/openmax",
+        "frameworks/av/media/libstagefright/mpeg2ts",
+    ],
+    
+    arch: {
+        arm: {
+            cflags: ["-Wno-psabi"],
+        },
+    },
+
+    cflags: [
+        "-Werror",
+        "-Wall",
+    ],
+
+    sanitize: {
+        misc_undefined: [
+            "signed-integer-overflow",
+            "unsigned-integer-overflow",
+        ],
+        cfi: true,
+    },
+}
+
+cc_library_shared {
+    name: "libstagefright_wfd",
+
+    defaults: ["libstagefright_wfd_defaults"],
+}
