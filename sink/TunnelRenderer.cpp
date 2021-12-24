@@ -24,8 +24,8 @@
 
 #include <binder/IMemory.h>
 #include <binder/IServiceManager.h>
-//#include <gui/SurfaceComposerClient.h>
-//#include <media/IMediaPlayerService.h>
+#include <media/IMediaPlayerService.h>
+#include <media/IMediaPlayerClient.h>
 #include <media/IStreamSource.h>
 #include <media/stagefright/foundation/ABuffer.h>
 #include <media/stagefright/foundation/ADebug.h>
@@ -33,7 +33,7 @@
 #include <ui/DisplayInfo.h>
 
 namespace android {
-/*
+
 struct TunnelRenderer::PlayerClient : public BnMediaPlayerClient {
     PlayerClient() {}
 
@@ -47,7 +47,7 @@ protected:
 private:
     DISALLOW_EVIL_CONSTRUCTORS(PlayerClient);
 };
-*/
+
 struct TunnelRenderer::StreamSource : public BnStreamSource {
     StreamSource(TunnelRenderer *owner);
 
@@ -134,6 +134,9 @@ void TunnelRenderer::StreamSource::doSomeWork() {
                     IStreamListener::kKeyDiscontinuityMask,
                     ATSParser::DISCONTINUITY_ABSOLUTE_TIME);
             */
+            extra->setInt32(
+                    "discontinuity-mask",
+                    ATSParser::DISCONTINUITY_ABSOLUTE_TIME);
             extra->setInt64("timeUs", ALooper::GetNowUs());
 
             mListener->issueCommand(
@@ -142,7 +145,7 @@ void TunnelRenderer::StreamSource::doSomeWork() {
                     extra);
         }
 
-        ALOGV("dequeue TS packet of size %zd", srcBuffer->size());
+        ALOGI("dequeue TS packet of size %zd", srcBuffer->size());
 
         size_t index = *mIndicesAvailable.begin();
         mIndicesAvailable.erase(mIndicesAvailable.begin());
@@ -159,9 +162,10 @@ void TunnelRenderer::StreamSource::doSomeWork() {
 ////////////////////////////////////////////////////////////////////////////////
 
 TunnelRenderer::TunnelRenderer(
-        const sp<AMessage> &notifyLost/*,
-        const sp<ISurfaceTexture> &surfaceTex*/)
+        const sp<AMessage> &notifyLost,
+        const sp<Surface> &surfaceTex)
     : mNotifyLost(notifyLost),
+      mSurfaceTex(surfaceTex),
       mTotalBytesQueued(0ll),
       mLastDequeuedExtSeqNo(-1),
       mFirstFailedAttemptUs(-1ll),
@@ -329,69 +333,36 @@ void TunnelRenderer::onMessageReceived(const sp<AMessage> &msg) {
 }
 
 void TunnelRenderer::initPlayer() {
-    /*
-    if (mSurfaceTex == NULL) {
-        mComposerClient = new SurfaceComposerClient;
-        CHECK_EQ(mComposerClient->initCheck(), (status_t)OK);
-
-        DisplayInfo info;
-        SurfaceComposerClient::getDisplayInfo(0, &info);
-        ssize_t displayWidth = info.w;
-        ssize_t displayHeight = info.h;
-
-        mSurfaceControl =
-            mComposerClient->createSurface(
-                    String8("A Surface"),
-                    displayWidth,
-                    displayHeight,
-                    PIXEL_FORMAT_RGB_565,
-                    0);
-
-        CHECK(mSurfaceControl != NULL);
-        CHECK(mSurfaceControl->isValid());
-
-        SurfaceComposerClient::openGlobalTransaction();
-        CHECK_EQ(mSurfaceControl->setLayer(INT_MAX), (status_t)OK);
-        CHECK_EQ(mSurfaceControl->show(), (status_t)OK);
-        SurfaceComposerClient::closeGlobalTransaction();
-
-        mSurface = mSurfaceControl->getSurface();
-        CHECK(mSurface != NULL);
+    ALOGI("init player......");
+    if (mSurfaceTex == NULL)
+    {
+        ALOGI("mSurface is null, init player error!");
+        return;
     }
-
     sp<IServiceManager> sm = defaultServiceManager();
     sp<IBinder> binder = sm->getService(String16("media.player"));
     sp<IMediaPlayerService> service = interface_cast<IMediaPlayerService>(binder);
     CHECK(service.get() != NULL);
 
     mStreamSource = new StreamSource(this);
-
-    mPlayerClient = new PlayerClient;
-
-    mPlayer = service->create(getpid(), mPlayerClient, 0);
+    mPlayerClient = new PlayerClient;    
+    mPlayer = service->create(/*getpid(),*/ mPlayerClient, AUDIO_SESSION_ALLOCATE);
+    
     CHECK(mPlayer != NULL);
-    CHECK_EQ(mPlayer->setDataSource(mStreamSource), (status_t)OK);
+    sp<IStreamSource> ss = mStreamSource;
+    CHECK_EQ(mPlayer->setDataSource(ss), (status_t)OK);
 
-    mPlayer->setVideoSurfaceTexture(
-            mSurfaceTex != NULL ? mSurfaceTex : mSurface->getSurfaceTexture());
-
-    mPlayer->start();*/
+    mPlayer->setVideoSurfaceTexture(mSurfaceTex->getIGraphicBufferProducer());
+    mPlayer->start();
 }
 
 void TunnelRenderer::destroyPlayer() {
     mStreamSource.clear();
-
-    /*
-    mPlayer->stop();
-    mPlayer.clear();
-
-    if (mSurfaceTex == NULL) {
-        mSurface.clear();
-        mSurfaceControl.clear();
-
-        mComposerClient->dispose();
-        mComposerClient.clear();
-    }*/
+    if (mPlayer != NULL)
+    {    
+        mPlayer->stop();
+        mPlayer.clear();
+    }
 }
 
 }  // namespace android

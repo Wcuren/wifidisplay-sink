@@ -20,7 +20,7 @@
 
 #include "ANetworkSession.h"
 
-//#include <gui/Surface.h>
+#include <gui/Surface.h>
 #include <media/stagefright/foundation/AHandler.h>
 
 namespace android {
@@ -33,8 +33,8 @@ struct RTPSink;
 // transport stream using a MediaPlayer instance.
 struct WifiDisplaySink : public AHandler {
     WifiDisplaySink(
-            const sp<ANetworkSession> &netSession/*,
-            const sp<ISurfaceTexture> &surfaceTex = NULL*/);
+            const sp<ANetworkSession> &netSession,
+            const sp<Surface> &surfaceTex = NULL);
 
     void start(const char *sourceHost, int32_t sourcePort);
     void start(const char *uri);
@@ -76,7 +76,7 @@ private:
 
     State mState;
     sp<ANetworkSession> mNetSession;
-    //sp<ISurfaceTexture> mSurfaceTex;
+    sp<Surface> mSurfaceTex;
     AString mSetupURI;
     AString mRTSPHost;
     int32_t mSessionID;

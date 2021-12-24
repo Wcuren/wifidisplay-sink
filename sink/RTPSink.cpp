@@ -30,7 +30,7 @@
 #include <media/stagefright/MediaErrors.h>
 #include <media/stagefright/Utils.h>
 #include <media/stagefright/foundation/ByteUtils.h>
-#define FALLTHROUGH_INTENDED [[fallthrough]]
+//#define FALLTHROUGH_INTENDED [[fallthrough]]
 
 namespace android {
 
@@ -239,9 +239,10 @@ void RTPSink::Source::addReportBlock(
 ////////////////////////////////////////////////////////////////////////////////
 
 RTPSink::RTPSink(
-        const sp<ANetworkSession> &netSession/*,
-        const sp<ISurfaceTexture> &surfaceTex*/)
+        const sp<ANetworkSession> &netSession,
+        const sp<Surface> &surfaceTex)
     : mNetSession(netSession),
+      mSurfaceTex(surfaceTex),
       mRTPPort(0),
       mRTPSessionID(0),
       mRTCPSessionID(0),
@@ -516,7 +517,7 @@ status_t RTPSink::parseRTP(const sp<ABuffer> &buffer) {
             sp<AMessage> notifyLost = new AMessage(kWhatPacketLost, this);
             notifyLost->setInt32("ssrc", srcId);
 
-            mRenderer = new TunnelRenderer(notifyLost/*, mSurfaceTex*/);
+            mRenderer = new TunnelRenderer(notifyLost, mSurfaceTex);
             looper()->registerHandler(mRenderer);
         }
 

@@ -18,26 +18,29 @@
 
 #define TUNNEL_RENDERER_H_
 
-//#include <gui/Surface.h>
+#include <gui/Surface.h>
+#include <gui/SurfaceComposerClient.h>
+#include <gui/SurfaceControl.h>
+#include <media/IMediaPlayer.h>
 #include <media/stagefright/foundation/AHandler.h>
 
 namespace android {
 
 struct ABuffer;
-/*
-struct SurfaceComposerClient;
-struct SurfaceControl;
-struct Surface;
-struct IMediaPlayer;
+
+class SurfaceComposerClient;
+class SurfaceControl;
+class Surface;
+class IMediaPlayer;
 struct IStreamListener;
-*/
+
 // This class reassembles incoming RTP packets into the correct order
 // and sends the resulting transport stream to a mediaplayer instance
 // for playback.
 struct TunnelRenderer : public AHandler {
     TunnelRenderer(
-            const sp<AMessage> &notifyLost/*,
-            const sp<ISurfaceTexture> &surfaceTex*/);
+            const sp<AMessage> &notifyLost,
+            const sp<Surface> &surfaceTex);
 
     sp<ABuffer> dequeueBuffer();
 
@@ -56,7 +59,7 @@ private:
     mutable Mutex mLock;
 
     sp<AMessage> mNotifyLost;
-    //sp<ISurfaceTexture> mSurfaceTex;
+    sp<Surface> mSurfaceTex;
 
     List<sp<ABuffer> > mPackets;
     int64_t mTotalBytesQueued;
@@ -65,9 +68,10 @@ private:
     sp<SurfaceComposerClient> mComposerClient;
     sp<SurfaceControl> mSurfaceControl;
     sp<Surface> mSurface;
+    */
     sp<PlayerClient> mPlayerClient;
     sp<IMediaPlayer> mPlayer;
-    */
+    
     sp<StreamSource> mStreamSource;
 
     int32_t mLastDequeuedExtSeqNo;

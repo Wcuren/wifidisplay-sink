@@ -363,7 +363,7 @@ status_t ANetworkSession::Session::readMore() {
             if (msg == NULL) {
                 break;
             }
-
+            ALOGI("readMore data:%s", mInBuffer.c_str());
             sp<AMessage> notify = mNotify->dup();
             notify->setInt32("sessionID", mSessionID);
             notify->setInt32("reason", kWhatData);
@@ -481,6 +481,7 @@ status_t ANetworkSession::Session::writeMore() {
 
     ssize_t n;
     do {
+        ALOGI("writeMore data:%s", mOutBuffer.c_str());
         n = send(mSocket, mOutBuffer.c_str(), mOutBuffer.size(), 0);
     } while (n < 0 && errno == EINTR);
 

@@ -22,7 +22,7 @@
 
 #include "LinearRegression.h"
 
-//#include <gui/Surface.h>
+#include <gui/Surface.h>
 
 namespace android {
 
@@ -34,8 +34,8 @@ struct TunnelRenderer;
 // for incoming transport stream data and occasionally sends statistics over
 // the RTCP channel.
 struct RTPSink : public AHandler {
-    RTPSink(const sp<ANetworkSession> &netSession/*,
-            const sp<ISurfaceTexture> &surfaceTex*/);
+    RTPSink(const sp<ANetworkSession> &netSession,
+            const sp<Surface> &surfaceTex);
 
     // If TCP interleaving is used, no UDP sockets are created, instead
     // incoming RTP/RTCP packets (arriving on the RTSP control connection)
@@ -66,7 +66,7 @@ private:
     struct StreamSource;
 
     sp<ANetworkSession> mNetSession;
-    //sp<ISurfaceTexture> mSurfaceTex;
+    sp<Surface> mSurfaceTex;
     KeyedVector<uint32_t, sp<Source> > mSources;
 
     int32_t mRTPPort;

@@ -30,10 +30,11 @@
 namespace android {
 
 WifiDisplaySink::WifiDisplaySink(
-        const sp<ANetworkSession> &netSession/*,
-        const sp<ISurfaceTexture> &surfaceTex*/)
+        const sp<ANetworkSession> &netSession,
+        const sp<Surface> &surfaceTex)
     : mState(UNDEFINED),
       mNetSession(netSession),
+      mSurfaceTex(surfaceTex),
       mSessionID(0),
       mNextCSeq(1) {
 }
@@ -474,9 +475,9 @@ void WifiDisplaySink::onGetParameterRequest(
         int32_t cseq,
         const sp<ParsedMessage> &data) {
     AString body =
-        "wfd_video_formats: xxx\r\n"
-        "wfd_audio_codecs: xxx\r\n"
-        "wfd_client_rtp_ports: RTP/AVP/UDP;unicast xxx 0 mode=play\r\n";
+        "wfd_video_formats: 78 00 01 01 00008400 00000000 00000000 00 0000 0000 00 none none\r\n"
+        "wfd_audio_codecs: LPCM 00000002 00, AAC 00000001 00\r\n"
+        "wfd_client_rtp_ports: RTP/AVP/UDP;unicast 20011 0 mode=play\r\n";
 
     AString response = "RTSP/1.0 200 OK\r\n";
     AppendCommonResponse(&response, cseq);
@@ -515,7 +516,7 @@ status_t WifiDisplaySink::sendDescribe(int32_t sessionID, const char *uri) {
 }
 
 status_t WifiDisplaySink::sendSetup(int32_t sessionID, const char *uri) {
-    mRTPSink = new RTPSink(mNetSession/*, mSurfaceTex*/);
+    mRTPSink = new RTPSink(mNetSession, mSurfaceTex);
     looper()->registerHandler(mRTPSink);
 
     status_t err = mRTPSink->init(sUseTCPInterleaving);
